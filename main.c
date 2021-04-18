@@ -10,6 +10,9 @@ void getVerses(const char *seq, const char *req, void *arg) {
 	strtok(reference + 2, "\"]");
 	
 	printf("%s", reference + 2);
+	sprintf(reference, "ret = `%s`;", "Test1\nTest2\nTest3");
+	puts(reference);
+	webview_eval(w, reference);
 }
 
 void loadTranslation(const char *seq, const char *req, void *arg) {
@@ -28,7 +31,7 @@ void loadTranslation(const char *seq, const char *req, void *arg) {
 	webview_bind(w, "getVerses", getVerses, NULL);
 	webview_bind(w, "loadTranslation", loadTranslation, NULL);
 
-	webview_navigate(w, "file:///home/dan/Documents/heb12app/ui/output.html");
+	webview_navigate(w, UIDIR);
 	webview_run(w);
 	webview_destroy(w);
 	return 0;
