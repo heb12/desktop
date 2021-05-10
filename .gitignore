@@ -1,3 +1,4 @@
 heb12
 *.o
 webview.h
+*.ghc

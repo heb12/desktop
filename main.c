@@ -1,18 +1,19 @@
 #include <stdio.h>
+
 #include "webview.h"
 
 webview_t w;
 
 void getVerses(const char *seq, const char *req, void *arg) {
 	// Remove [""]
-	char reference[512];
+	char reference[256];
 	strcpy(reference, req);
 	strtok(reference + 2, "\"]");
-	
-	printf("%s", reference + 2);
-	sprintf(reference, "ret = `%s`;", "Test1\nTest2\nTest3");
-	puts(reference);
-	webview_eval(w, reference);
+
+	char javascript[512];
+	sprintf(javascript, "ret = `%s\nTest1`;", reference + 2);
+
+	webview_eval(w, javascript);
 }
 
 void loadTranslation(const char *seq, const char *req, void *arg) {
