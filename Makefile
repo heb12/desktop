@@ -1,6 +1,8 @@
 # TODO: Precompiled header?
 # I tried everthing, it just didn't work, as if the feature was
 # never implemented in GCC.
+# Also, C is being compiled with C++ compiler.
+# This is bad.
 
 
 PLATFORM ?= desktop
@@ -9,15 +11,17 @@ PLATFORM ?= desktop
 UIDIR ?= "file://$(CURDIR)/ui/output.html"
 
 CC := g++
-CFLAGS := -Wall -g -lstdc++ `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0`
+CFLAGS := -fpermissive -Wall -g -O0 -lstdc++ `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0`
+
+HAPLOUS := $(shell ls haplous/*.c | grep -v test.c)
 
 default: ui main demo
 
-ui:
+html:
 	@cd ui; node builder.js $(PLATFORM)
 
 main:
-	@$(CC) -D UIDIR='$(UIDIR)' $(CFLAGS) main.c -o heb12
+	@$(CC) -D UIDIR='$(UIDIR)' $(CFLAGS) $(HAPLOUS) fbrp/fbrp.c main.c -o heb12
 
 demo:
 	@./heb12

@@ -1,23 +1,52 @@
 #include <stdio.h>
 
 #include "webview.h"
+#include "fbrp/fbrp.h"
+#include "haplous/haplous.h"
 
+struct haplous_work work;
+struct Reference ref;
+int err = 0;
 webview_t w;
 
-void getVerses(const char *seq, const char *req, void *arg) {
-	// Remove [""]
-	char reference[256];
-	strcpy(reference, req);
+char *removeJS(char reference[]) {
 	strtok(reference + 2, "\"]");
+	return reference + 2;
+}
 
-	char javascript[512];
-	sprintf(javascript, "ret = `%s\nTest1`;", reference + 2);
+void getVerses(const char *seq, const char *req, void *arg) {
+	parseReference(&ref, removeJS(req));
+	char *text;
+	struct haplous_reference href = {
+		ref.book,
+		ref.chapter[0].range[0],
+		ref.verse[0].range[0] + 1,
+		ref.verse[0].range[1] + 1
+	};
+	
+	if (ref.verseLength == 0) {
+		text = haplous_work_chapter_get(work.file, href, &err);
+	} else {
+		text = haplous_work_verses_get(work.file, href, &err);
+	}
+
+	if (err != HAPLOUS_OK) {
+		printf("Haplous err2 %d\n", err);
+		exit(err);
+	}
+
+	char javascript[8192];
+	snprintf(javascript, 8192, "ret = `%s`;", text);
 
 	webview_eval(w, javascript);
 }
 
 void loadTranslation(const char *seq, const char *req, void *arg) {
-	
+	work = haplous_work_init("kjv.txt", &err);
+	if (err != HAPLOUS_OK) {
+		puts("Haplous err");
+		exit(0);
+	}
 }
 
 #ifdef WIN32
@@ -35,6 +64,10 @@ void loadTranslation(const char *seq, const char *req, void *arg) {
 	webview_navigate(w, UIDIR);
 	webview_run(w);
 	webview_destroy(w);
+
+	// Assume translation was loaded
+	haplous_work_cleanup(&work);
+	
 	return 0;
 }
 

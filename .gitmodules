@@ -1,3 +1,9 @@
 [submodule "ui"]
 	path = ui
 	url = https://github.com/heb12/ui
+[submodule "haplous"]
+	path = haplous
+	url = https://code.heb12.com/heb12/haplous
+[submodule "fbrp"]
+	path = fbrp
+	url = https://code.heb12.com/heb12/fbrp
