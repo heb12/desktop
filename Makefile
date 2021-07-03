@@ -4,7 +4,6 @@
 # Also, C is being compiled with C++ compiler.
 # This is bad.
 
-
 PLATFORM ?= desktop
 
 # Development dir
@@ -21,10 +20,15 @@ html:
 	@cd ui; node builder.js $(PLATFORM)
 
 main:
-	@$(CC) -D UIDIR='$(UIDIR)' $(CFLAGS) $(HAPLOUS) fbrp/fbrp.c main.c -o heb12
+	# Source code files must be declared before
+	# libs for some reason
+	@$(CC) -D UIDIR='$(UIDIR)' $(HAPLOUS) webview.h fbrp/fbrp.c main.c $(CFLAGS) -o heb12
 
 demo:
 	@./heb12
+
+clean:
+	@rm heb12
 
 setup:
 	sudo apt install webkit2gtk-4.0

@@ -1,12 +1,14 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "webview.h"
 #include "fbrp/fbrp.h"
 #include "haplous/haplous.h"
 
 struct haplous_work work;
-struct Reference ref;
+struct FbrpReference ref;
 int err = 0;
+
 webview_t w;
 
 char *removeJS(char reference[]) {
@@ -15,7 +17,7 @@ char *removeJS(char reference[]) {
 }
 
 void getVerses(const char *seq, const char *req, void *arg) {
-	parseReference(&ref, removeJS(req));
+	fbrp_parse(&ref, removeJS(req));
 	char *text;
 	struct haplous_reference href = {
 		ref.book,
@@ -30,13 +32,18 @@ void getVerses(const char *seq, const char *req, void *arg) {
 		text = haplous_work_verses_get(work.file, href, &err);
 	}
 
+	// Remove last newline
+	text[strlen(text) - 1] = 0;
+
 	if (err != HAPLOUS_OK) {
-		printf("Haplous err2 %d\n", err);
+		printf("Haplous err %d\n", err);
 		exit(err);
 	}
 
 	char javascript[8192];
-	snprintf(javascript, 8192, "ret = `%s`;", text);
+	snprintf(javascript, sizeof(javascript), "ret = `%s`;", text);
+
+	free(text);
 
 	webview_eval(w, javascript);
 }
