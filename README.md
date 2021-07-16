@@ -1,7 +1,11 @@
 # Desktop
-Heb12 desktop app powered by webview.
+Heb12 desktop app powered by [webview](https://github.com/webview/).
+
 ```
 make setup
 make
 ```
-Needs webkit gtk and a bloated C++ compiler
+
+Compilation requirements:  
+- libwebkit2gtk-4.0-dev  
+- A fairly bloated C++ compiler ;)  
