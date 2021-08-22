@@ -6,6 +6,12 @@
 #include "fbrp/fbrp.h"
 #include "haplous/haplous.h"
 
+#define HAPLOUS_ERR() \
+	if (err != HAPLOUS_OK) { \
+		printf("Haplous err %d\n", err); \
+		exit(err); \
+	}
+
 struct haplous_work work;
 struct FbrpReference ref;
 int err = 0;
@@ -20,33 +26,47 @@ char *removeJS(char reference[]) {
 void getVerses(const char *seq, const char *req, void *arg) {
 	fbrp_parse(&ref, removeJS(req));
 	char *text;
-	struct haplous_reference href = {
-		ref.book,
-		ref.chapter[0].range[0],
-		ref.verse[0].range[0] + 1,
-		ref.verse[0].range[1] + 1
-	};
-	
+
+	char javascript[1024 * 8];
+
+	webview_eval(w, "ret = ``;");
+
 	if (ref.verseLength == 0) {
+		struct haplous_reference href = {
+			ref.book,
+			ref.chapter[0].range[0],
+			0, 0
+		};
+
 		text = haplous_work_chapter_get(work.file, href, &err);
+		text[strlen(text) - 1] = 0;
+		snprintf(javascript, sizeof(javascript), "ret = `%s`;", text);
+		webview_eval(w, javascript);
 	} else {
-		text = haplous_work_verses_get(work.file, href, &err);
+		for (int v = 0; v < ref.verseLength; v++) {
+			struct haplous_reference href = {
+				ref.book,
+				ref.chapter[0].range[0],
+				ref.verse[v].range[0],
+				ref.verse[v].range[1]
+			};
+
+			text = haplous_work_verses_get(work.file, href, &err);
+			HAPLOUS_ERR()
+			if (v == ref.verseLength - 1) {
+				text[strlen(text) - 1] = 0;
+			}
+
+			snprintf(javascript, sizeof(javascript), "ret += `%s`;", text);
+			webview_eval(w, javascript);
+
+			free(text);
+		}
 	}
 
-	// Remove last newline
-	text[strlen(text) - 1] = 0;
+	HAPLOUS_ERR()
 
-	if (err != HAPLOUS_OK) {
-		printf("Haplous err %d\n", err);
-		exit(err);
-	}
-
-	char javascript[8192];
-	snprintf(javascript, sizeof(javascript), "ret = `%s`;", text);
-
-	free(text);
-
-	webview_eval(w, javascript);
+	webview_eval(w, "trigger = true;");
 }
 
 void loadTranslation(const char *seq, const char *req, void *arg) {
@@ -55,6 +75,10 @@ void loadTranslation(const char *seq, const char *req, void *arg) {
 		puts("Haplous err");
 		exit(0);
 	}
+}
+
+void debug(const char *seq, const char *req, void *arg) {
+	puts(req);
 }
 
 #ifdef WIN32
@@ -68,6 +92,7 @@ void loadTranslation(const char *seq, const char *req, void *arg) {
 
 	webview_bind(w, "getVerses", getVerses, NULL);
 	webview_bind(w, "loadTranslation", loadTranslation, NULL);
+	webview_bind(w, "debug", debug, NULL);
 
 	webview_navigate(w, UIDIR);
 	webview_run(w);
@@ -78,5 +103,4 @@ void loadTranslation(const char *seq, const char *req, void *arg) {
 	
 	return 0;
 }
-
 
