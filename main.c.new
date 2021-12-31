@@ -2,6 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+
+{
+	name: "John 3 16"
+	text: "For..."
+}
+
+*/
+
 #include "webview.h"
 #include "fbrp/fbrp.h"
 #include "haplous/haplous.h"
@@ -29,10 +38,9 @@ void getVerses(const char *seq, const char *req, void *arg) {
 	fbrp_parse(&ref, removeJS(output));
 
 	char *text;
-
 	char javascript[1024 * 8];
 
-	webview_eval(w, "ret = ``;");
+	webview_eval(w, "ret = [];");
 
 	if (ref.verseLength == 0) {
 		struct haplous_reference href = {
@@ -43,7 +51,12 @@ void getVerses(const char *seq, const char *req, void *arg) {
 
 		text = haplous_work_chapter_get(work.file, href, &err);
 		text[strlen(text) - 1] = 0;
-		snprintf(javascript, sizeof(javascript), "ret = `%s`;", text);
+		snprintf(javascript, sizeof(javascript),
+			"ret.push({name: `%s %u`, text: `%s`});",
+			ref.book,ref.chapter[0].range[0],
+			text
+		);
+
 		webview_eval(w, javascript);
 	} else {
 		for (int v = 0; v < ref.verseLength; v++) {
@@ -60,7 +73,14 @@ void getVerses(const char *seq, const char *req, void *arg) {
 				text[strlen(text) - 1] = 0;
 			}
 
-			snprintf(javascript, sizeof(javascript), "ret += `%s`;", text);
+			snprintf(javascript, sizeof(javascript),
+				"ret.push({name: `%s %u %u-%u`, text: `%s`});",
+				ref.book, ref.chapter[0].range[0],
+				ref.verse[v].range[0],
+				ref.verse[v].range[1],
+				text
+			);
+
 			webview_eval(w, javascript);
 
 			free(text);
@@ -106,3 +126,4 @@ void debug(const char *seq, const char *req, void *arg) {
 	
 	return 0;
 }
+

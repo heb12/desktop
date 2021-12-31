@@ -2,7 +2,7 @@
 Heb12 desktop app powered by [webview](https://github.com/webview/).
 
 ```
-make setup
+sudo apt install libwebkit2gtk-4.0-dev
 make
 ```
 
